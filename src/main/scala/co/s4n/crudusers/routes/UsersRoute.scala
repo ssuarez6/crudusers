@@ -1,10 +1,12 @@
 package co.s4n.cruduser.routes
 
 import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.model.{HttpEntity, HttpResponse, StatusCodes}
 import de.heikoseeberger.akkahttpcirce.CirceSupport._
 import io.circe.generic.auto._
-import io.circe.generic.auto._, io.circe.syntax._
+import io.circe.generic.auto._
+import io.circe.syntax._
+
 import scala.collection.mutable.ListBuffer
 import co.s4n.crudusers.models.{User, UsersPersistance}
 
@@ -15,15 +17,15 @@ class UsersRoute(up: UsersPersistance) {
         get {
           val res: Option[User] = up.users.find(x => x.id == userId)
           res match {
-            case Some(user) => complete(user.asJson.toString)
+            case Some(user) => complete(HttpResponse(StatusCodes.OK, entity = user.asJson.toString))
             case _ => complete(StatusCodes.NotFound)
           }
         } ~
         delete {
           case class Msg(success: Boolean, message: String)
           if (up.remove(userId))
-            complete(Msg(true, "user deleted successfully").asJson.toString)
-          else complete(Msg(false, "user not found on the system").asJson.toString)
+            complete(HttpResponse(StatusCodes.OK, entity = Msg(true, "user deleted successfully").asJson.toString))
+          else complete(HttpResponse(StatusCodes.NotFound, entity = Msg(false, "user not found on the system").asJson.toString))
         }
       }
     } ~ 
@@ -34,8 +36,8 @@ class UsersRoute(up: UsersPersistance) {
         capsule =>
           case class Msg(success: Boolean, message: String, users: ListBuffer[User])
           if(up.add(capsule.username)) 
-            complete(Msg(true, "user added successfully", up.users).asJson.toString)
-          else complete(Msg(false, "username already in use", up.users).asJson.toString)
+            complete(HttpResponse(StatusCodes.OK, entity = Msg(true, "user added successfully", up.users).asJson.toString))
+          else complete(HttpResponse(StatusCodes.Conflict, entity = Msg(false, "username already in use", up.users).asJson.toString))
       }
     } ~
     put {
@@ -44,13 +46,14 @@ class UsersRoute(up: UsersPersistance) {
           val couldUpdate = up.updateById(user)
           case class Msg(success: Boolean, message: String)
           if(couldUpdate){
-            complete(Msg(true, "user could be updated").asJson.toString)
-          }else complete(Msg(false, "user not found to update").asJson.toString)
+            complete(HttpResponse(StatusCodes.OK, entity = Msg(true, "user could be updated").asJson.toString))
+          }else
+            complete(HttpResponse(StatusCodes.NotFound, entity = Msg(false, "user not found to update").asJson.toString))
       }
     } ~
     get {
       case class Msg(users: ListBuffer[User])
-      complete(Msg(up.users).asJson.toString)
+      complete(HttpResponse(StatusCodes.OK, entity = Msg(up.users).asJson.toString))
     }
   }
 }
