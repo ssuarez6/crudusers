@@ -29,31 +29,31 @@ class UsersRoute(up: UsersPersistance) {
         }
       }
     } ~ 
-  path("users"){
-    post {
-      case class Username(username: String)
-      entity(as[Username]) {
-        capsule =>
-          case class Msg(success: Boolean, message: String, users: ListBuffer[User])
-          if(up.add(capsule.username)) 
-            complete(HttpResponse(StatusCodes.OK, entity = Msg(true, "user added successfully", up.users).asJson.toString))
-          else complete(HttpResponse(StatusCodes.Conflict, entity = Msg(false, "username already in use", up.users).asJson.toString))
+    path("users"){
+      post {
+        case class Username(username: String)
+        entity(as[Username]) {
+          capsule =>
+        case class Msg(success: Boolean, message: String, users: ListBuffer[User])
+        if(up.add(capsule.username)) 
+          complete(HttpResponse(StatusCodes.OK, entity = Msg(true, "user added successfully", up.users).asJson.toString))
+        else complete(HttpResponse(StatusCodes.Conflict, entity = Msg(false, "username already in use", up.users).asJson.toString))
+        }
+      } ~
+      put {
+        entity(as[User]){
+          user =>
+            val couldUpdate = up.updateById(user)
+        case class Msg(success: Boolean, message: String)
+        if(couldUpdate){
+          complete(HttpResponse(StatusCodes.OK, entity = Msg(true, "user could be updated").asJson.toString))
+        }else
+          complete(HttpResponse(StatusCodes.NotFound, entity = Msg(false, "user not found to update").asJson.toString))
+        }
+      } ~
+      get {
+        case class Msg(users: ListBuffer[User])
+        complete(HttpResponse(StatusCodes.OK, entity = Msg(up.users).asJson.toString))
       }
-    } ~
-    put {
-      entity(as[User]){
-        user =>
-          val couldUpdate = up.updateById(user)
-          case class Msg(success: Boolean, message: String)
-          if(couldUpdate){
-            complete(HttpResponse(StatusCodes.OK, entity = Msg(true, "user could be updated").asJson.toString))
-          }else
-            complete(HttpResponse(StatusCodes.NotFound, entity = Msg(false, "user not found to update").asJson.toString))
-      }
-    } ~
-    get {
-      case class Msg(users: ListBuffer[User])
-      complete(HttpResponse(StatusCodes.OK, entity = Msg(up.users).asJson.toString))
     }
-  }
 }

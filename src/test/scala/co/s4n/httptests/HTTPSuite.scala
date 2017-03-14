@@ -6,5 +6,8 @@ import akka.http.scaladsl.server.Directives._
 import akka.stream.ActorMaterializer
 import scala.io.StdIn
 import akka.http.scaladsl.Http
+import org.scalatest.FunSuite
 
-
+class HttpSuite extends FunSuite {
+  
+}

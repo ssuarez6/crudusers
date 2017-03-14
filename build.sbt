@@ -15,4 +15,4 @@ libraryDependencies += "io.circe" %% "circe-core" % "0.7.0"
 libraryDependencies += "io.circe" %% "circe-generic" % "0.7.0"
 libraryDependencies += "io.circe" %% "circe-parser" % "0.7.0"
 
-cancelable in Global := true //permite ctrl-c sin salir de sbt
+cancelable in Global := true 

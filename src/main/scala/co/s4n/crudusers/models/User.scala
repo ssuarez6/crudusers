@@ -38,10 +38,4 @@ class UsersPersistance {
       case None => false
     }
   }
-
-  override def toString = {
-    var res = "["
-    users.foreach(u => res += u)
-    res + "]"
-  }
 }
