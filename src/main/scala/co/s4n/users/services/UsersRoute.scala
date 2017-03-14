@@ -1,4 +1,4 @@
-package co.s4n.cruduser.routes
+package co.s4n.users.services
 
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.model.{HttpEntity, HttpResponse, StatusCodes}
@@ -8,7 +8,7 @@ import io.circe.generic.auto._
 import io.circe.syntax._
 
 import scala.collection.mutable.ListBuffer
-import co.s4n.crudusers.models.{User, UsersPersistance}
+import co.s4n.users.persistance.{User, UsersPersistance}
 
 class UsersRoute(up: UsersPersistance) {
   val route = 

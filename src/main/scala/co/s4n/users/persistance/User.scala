@@ -1,4 +1,4 @@
-package co.s4n.crudusers.models
+package co.s4n.users.persistance
 
 import scala.collection.mutable.ListBuffer
 
