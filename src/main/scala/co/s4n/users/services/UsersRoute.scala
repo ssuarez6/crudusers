@@ -4,56 +4,75 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.model.{HttpEntity, HttpResponse, StatusCodes}
 import de.heikoseeberger.akkahttpcirce.CirceSupport._
 import io.circe.generic.auto._
-import io.circe.generic.auto._
 import io.circe.syntax._
+import co.s4n.users.persistance.entity.User
+import scala.concurrent.Future
+import scala.util.{Failure, Success}
+import scala.concurrent.ExecutionContext.Implicits.global
 
-import scala.collection.mutable.ListBuffer
-import co.s4n.users.persistance.{User, UsersPersistance}
+sealed trait Message
+case class MsgSuccess(success: Boolean, message: String) extends Message
+case class MsgUser(user: User) extends Message
 
-class UsersRoute(up: UsersPersistance) {
-  val route = 
-    path("users" / IntNumber) {
-      userId => {
-        get {
-          val res: Option[User] = up.users.find(x => x.id == userId)
-          res match {
-            case Some(user) => complete(HttpResponse(StatusCodes.OK, entity = user.asJson.toString))
-            case _ => complete(StatusCodes.NotFound)
-          }
-        } ~
-        delete {
-          case class Msg(success: Boolean, message: String)
-          if (up.remove(userId))
-            complete(HttpResponse(StatusCodes.OK, entity = Msg(true, "user deleted successfully").asJson.toString))
-          else complete(HttpResponse(StatusCodes.NotFound, entity = Msg(false, "user not found on the system").asJson.toString))
-        }
-      }
-    } ~ 
-    path("users"){
-      post {
-        case class Username(username: String)
-        entity(as[Username]) {
-          capsule =>
-        case class Msg(success: Boolean, message: String, users: ListBuffer[User])
-        if(up.add(capsule.username)) 
-          complete(HttpResponse(StatusCodes.OK, entity = Msg(true, "user added successfully", up.users).asJson.toString))
-        else complete(HttpResponse(StatusCodes.Conflict, entity = Msg(false, "username already in use", up.users).asJson.toString))
-        }
-      } ~
-      put {
-        entity(as[User]){
-          user =>
-            val couldUpdate = up.updateById(user)
-        case class Msg(success: Boolean, message: String)
-        if(couldUpdate){
-          complete(HttpResponse(StatusCodes.OK, entity = Msg(true, "user could be updated").asJson.toString))
-        }else
-          complete(HttpResponse(StatusCodes.NotFound, entity = Msg(false, "user not found to update").asJson.toString))
-        }
-      } ~
+class UsersRoute{
+  val route = path("users" / IntNumber) {
+    userId => {
       get {
-        case class Msg(users: ListBuffer[User])
-        complete(HttpResponse(StatusCodes.OK, entity = Msg(up.users).asJson.toString))
+        val res: Future[Option[User]] = UserService.getUserById(userId).map(x => {
+          val user: User = x.getOrElse(User(-1, "__invalid"))
+          if(user.id == -1 && user.username == "__invalid"){
+            MsgSuccess(false, "user could not be found").asJson.toString
+          }else{
+            case class Msg(user: User)
+            MsgUser(user).asJson.toString
+          }
+        }).recover {
+          case ex => {
+            println(ex)
+            MsgSuccess(false, "internal server problem").asJson.toString
+          }
+        }  
+        complete(res)
+      } ~ delete {
+        val res = UserService.deleteById(userId)
+        val res2: Future[String] = res.map(x =>{
+          println("WHEN DELETING:")
+          println(x)
+          println(x.toString)
+          MsgSuccess(true, "user deleted successfully").asJson.toString
+          }).recover {
+            case _ => MsgSuccess(false, "internal server problem").asJson.toString
+          }
+        complete(res2)
       }
     }
+  } ~ path("users"){
+    post {
+      entity(as[User]) { capsule =>
+        case class Msg(success: Boolean, message: String)
+        val res = UserService.saveOrUpdate(capsule)
+        val msg: Future[String] = res.map(x =>{
+          MsgSuccess(true, s"user saved successfully\n${x.toString}")
+            .asJson
+            .toString
+            }).recover {
+              case _ => MsgSuccess(false, "internal server problem").asJson.toString
+            }
+        complete(msg)
+      }
+    } ~ put {
+      entity(as[User]){ user =>
+        case class Msg(success: Boolean, message: String)
+        val res = UserService.saveOrUpdate(user)
+        val msg: Future[String] = res.map(x =>{
+          MsgSuccess(true, s"user updated successfully\n${x.toString}")
+            .asJson
+            .toString
+            }).recover{
+              case _ => MsgSuccess(false, "internal server problem").asJson.toString
+            }
+        complete(msg)
+      }
+    }
+  }
 }
