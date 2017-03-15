@@ -1,7 +1,7 @@
 package co.s4n.users.services
 
-import co.s4n.users.persistance.database.ProductionDatabase
-import co.s4n.users.persistance.entity.User
+import co.s4n.users.persistance.ProductionDatabase
+import co.s4n.users.persistance.User
 import com.outworkers.phantom.dsl._
 import scala.concurrent.Future
 
@@ -14,6 +14,9 @@ trait UserService extends ProductionDatabase {
 
   def deleteById(id: Int): Future[ResultSet] =
     database.userModel.deleteUserById(id)
+
+  def getUsers: Future[Seq[User]] =
+    database.userModel.getUsers
 }
 
 object UserService extends UserService with ProductionDatabase

@@ -5,7 +5,7 @@ import akka.http.scaladsl.Http
 import akka.stream.ActorMaterializer
 import scala.io.StdIn
 import co.s4n.users.services.UsersRoute
-import co.s4n.users.persistance.database.ProductionDatabase
+import co.s4n.users.persistance.ProductionDatabase
 import scala.concurrent.duration._
 
 object UsersServer extends App with ProductionDatabase{

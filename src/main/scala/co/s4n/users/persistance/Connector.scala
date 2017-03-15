@@ -1,4 +1,4 @@
-package co.s4n.users.persistance.connector
+package co.s4n.users.persistance
 
 import com.outworkers.phantom.connectors.{CassandraConnection, ContactPoint, ContactPoints}
 import com.typesafe.config.ConfigFactory

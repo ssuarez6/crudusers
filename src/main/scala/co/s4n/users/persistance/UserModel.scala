@@ -1,8 +1,7 @@
-package co.s4n.users.persistance.model
+package co.s4n.users.persistance
 
 import com.outworkers.phantom.dsl._
 import scala.concurrent.Future
-import co.s4n.users.persistance.entity.User
 
 class UserModel extends CassandraTable[ConcreteUserModel, User] {
   override def tableName: String = "users"
@@ -37,5 +36,11 @@ abstract class ConcreteUserModel extends UserModel with RootConnector {
       .where(_.id eqs id)
       .consistencyLevel_=(ConsistencyLevel.ONE)
       .future()
+  }
+
+  def getUsers: Future[Seq[User]] = {
+    select
+      .consistencyLevel_=(ConsistencyLevel.ONE)
+      .fetch()
   }
 }
