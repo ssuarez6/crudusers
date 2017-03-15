@@ -23,12 +23,10 @@ class UsersRoute{
           if(user.id == -1 && user.username == "__invalid"){
             MsgSuccess(false, "user could not be found").asJson.toString
           }else{
-            case class Msg(user: User)
             MsgUser(user).asJson.toString
           }
         }).recover {
-          case ex => {
-            println(ex)
+          case _ => {
             MsgSuccess(false, "internal server problem").asJson.toString
           }
         }  
@@ -73,6 +71,14 @@ class UsersRoute{
             }
         complete(msg)
       }
+    }
+  }
+
+  val route2 = path("test"){
+    get{
+      val fut: Future[HttpResponse] =
+        Future(HttpResponse(StatusCodes.OK, MsgSuccess(true, "afjañsdlfj").asJson.toString))
+      complete(StatusCodes.OK)
     }
   }
 }
