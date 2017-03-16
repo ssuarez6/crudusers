@@ -7,11 +7,11 @@ import java.util.UUID
 class UserModel extends CassandraTable[ConcreteUserModel, User] {
   override def tableName: String = "users"
 
-  object id extends UUIDColumn(this) with PartitionKey {
+  object id extends UUIDColumn(this)  {
     override lazy val name = "user_id"
   }
 
-  object username extends StringColumn(this)
+  object username extends StringColumn(this) with PartitionKey
   
   object fullName extends StringColumn(this)
 
