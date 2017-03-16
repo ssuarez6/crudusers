@@ -8,15 +8,13 @@ import scala.collection.JavaConversions._
 object Connector {
   private val config = ConfigFactory.load()
 
+  val list = (1 to 20).toList
+
   private val hosts = config.getStringList("cassandra.host")
   private val keyspace = config.getString("cassandra.keyspace")
   private val username = config.getString("cassandra.username")
   private val password = config.getString("cassandra.password")
 
-  /**
-   * Create a connector with the ability to connects to
-   * multiple hosts in a secured cluster
-   */
   lazy val connector: CassandraConnection = ContactPoints(hosts)
     .withClusterBuilder(_.withCredentials(username, password))
     .keySpace(keyspace)

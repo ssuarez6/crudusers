@@ -27,3 +27,4 @@ libraryDependencies ++= {
 }
 
 cancelable in Global := true 
+Revolver.settings

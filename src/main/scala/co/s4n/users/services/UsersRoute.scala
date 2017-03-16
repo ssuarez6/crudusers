@@ -1,98 +1,77 @@
 package co.s4n.users.services
 
 import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.model.{HttpEntity, HttpResponse, StatusCodes}
+import akka.http.scaladsl.model.{HttpResponse, StatusCodes, StatusCode}
 import de.heikoseeberger.akkahttpcirce.CirceSupport._
 import io.circe.generic.auto._
-import io.circe.syntax._
 import co.s4n.users.persistance.User
+import io.circe.Json
 import com.outworkers.phantom.dsl.ResultSet
-
 import scala.concurrent.Future
-import scala.util.{Failure, Success}
-import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.ExecutionContext
 
-sealed trait APIMessage
-case class MsgSuccess(success: Boolean, message: String) extends APIMessage
-case class MsgUser(user: User) extends APIMessage
-
-class UsersRoute{
-  val route = path("users" / IntNumber) {
-    userId => {
+class UsersRoute(implicit ec: ExecutionContext){
+  import UsersRoute.Responsable._
+  val route = path("users" / Segment) {
+    username => {
       get {
-        val res: Future[HttpResponse] = UserService.getUserById(userId).map(x => {
-          val user: User = x.getOrElse(User(-1, "__invalid"))
-          if(user.id == -1 && user.username == "__invalid"){
-            HttpResponse(StatusCodes.NotFound, entity = 
-              MsgSuccess(false, "user could not be found")
-                .asJson
-                .toString)
-          }else{
-            HttpResponse(StatusCodes.OK, entity = 
-              MsgUser(user)
-                .asJson
-                .toString)
-          }
-        }).recover{
-          case _ => HttpResponse(StatusCodes.InternalServerError, entity =
-            MsgSuccess(false, "internal server problem")
-              .asJson
-              .toString)
-        }
-        complete(res)
+        complete(UserFuture.toResponse(UserDatabase.getUserByUsername(username)))
       } ~ delete {
-        val res = UserService.deleteById(userId)
-        val res2: Future[HttpResponse] = res.map(x =>{
-          HttpResponse(StatusCodes.OK, entity = 
-            MsgSuccess(true, "user deleted successfully")
-              .asJson
-              .toString)
-          }).recover {
-            case _ => HttpResponse(StatusCodes.InternalServerError, entity = 
-              MsgSuccess(false, "internal server problem")
-                .asJson
-                .toString)
-          }
-        complete(res2)
+        complete(ResultSetFuture.toResponse(UserDatabase.deleteByUsername(username))) 
       }
     }
   } ~ path("users"){
     post {
-      entity(as[User]) { capsule =>
-        case class Msg(success: Boolean, message: String)
-        val res = UserService.saveOrUpdate(capsule)
-        val msg: Future[HttpResponse] = res.map(x =>{
-          HttpResponse(StatusCodes.OK, entity = 
-            MsgSuccess(true, s"user saved successfully\n${x.toString}")
-              .asJson
-              .toString)
-            }).recover {
-              case _ => HttpResponse(StatusCodes.InternalServerError, entity = 
-                MsgSuccess(false, "internal server problem")
-                  .asJson
-                  .toString)
-            }
-        complete(msg)
+      entity(as[User]) { user =>
+        complete(ResultSetFuture.toResponse(UserDatabase.saveOrUpdate(user)))
       }
     } ~ put {
       entity(as[User]){ user =>
-        val res = UserService.saveOrUpdate(user)
-        val msg: Future[HttpResponse] = res.map(x =>{
-          HttpResponse(StatusCodes.OK, entity = 
-            MsgSuccess(true, s"user updated successfully\n${x.toString}")
-              .asJson
-              .toString)
-            }).recover{
-              case _ => HttpResponse(StatusCodes.InternalServerError, entity = 
-                MsgSuccess(false, "internal server problem").asJson.toString)
-            }
-        complete(msg)
+        complete(ResultSetFuture.toResponse(UserDatabase.saveOrUpdate(user)))
       }
     } ~ get {
-      val res: Future[HttpResponse] = UserService.getUsers.map(x =>{
-        HttpResponse(StatusCodes.OK, entity = x.asJson.toString)
-      })
-      complete(res)
+      complete(SeqUserFuture.toResponse(UserDatabase.getUsers))
+    }
+  }
+}
+
+object UsersRoute {
+  sealed trait AppMsg
+  case class MsgUser(user: User) extends AppMsg
+  case class MsgUsers(users: Seq[User]) extends AppMsg
+  case class MsgException(exceptionMessage: String) extends AppMsg
+
+  trait Responsable[T] {
+    def toResponse(fut: Future[T])(implicit ec: ExecutionContext): Future[(StatusCode, Option[AppMsg])]
+  }
+  object Responsable {
+    object ResultSetFuture extends Responsable[ResultSet] {
+      def toResponse(fut: Future[ResultSet])(implicit ec: ExecutionContext): Future[(StatusCode, Option[AppMsg])] = {
+        fut.map(res => (StatusCodes.OK, None)).recover{
+          case ex => (StatusCodes.InternalServerError, Some(MsgException(ex.getMessage)))
+        }
+      }
+    }
+
+    object UserFuture extends Responsable[Option[User]]{
+      def toResponse(fut: Future[Option[User]])(implicit ec: ExecutionContext): Future[(StatusCode, Option[AppMsg])] = {
+        fut.map(x => {
+          if(x.isDefined) (StatusCodes.OK, Some(MsgUser(x.get)))
+          else (StatusCodes.NotFound, None)
+          }).recover{
+            case ex => (StatusCodes.InternalServerError, Some(MsgException(ex.getMessage)))
+          }
+      }
+    }
+
+    object SeqUserFuture extends Responsable[Seq[User]] {
+      def toResponse(fut: Future[Seq[User]])(implicit ec: ExecutionContext): Future[(StatusCode, Option[AppMsg])] = {
+        fut.map(x => {
+          (StatusCodes.OK, Some(MsgUsers(x)))
+          }).recover {
+            case ex => (StatusCodes.InternalServerError, Some(MsgException(ex.getMessage)))
+          }
+      }
     }
   }
 }

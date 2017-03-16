@@ -5,18 +5,18 @@ import co.s4n.users.persistance.User
 import com.outworkers.phantom.dsl._
 import scala.concurrent.Future
 
-trait UserService extends ProductionDatabase {
-  def getUserById(id: Int): Future[Option[User]] = 
-    database.userModel.getUserById(id)
+trait UserDatabase extends ProductionDatabase {
+  def getUserByUsername(username: String): Future[Option[User]] = 
+    database.userModel.getUserByUsername(username)
 
   def saveOrUpdate(user: User): Future[ResultSet] =
     database.userModel.store(user)
 
-  def deleteById(id: Int): Future[ResultSet] =
-    database.userModel.deleteUserById(id)
+  def deleteByUsername(username: String): Future[ResultSet] =
+    database.userModel.deleteUserByUsername(username)
 
   def getUsers: Future[Seq[User]] =
     database.userModel.getUsers
 }
 
-object UserService extends UserService with ProductionDatabase
+object UserDatabase extends UserDatabase with ProductionDatabase

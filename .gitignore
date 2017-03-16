@@ -2,3 +2,4 @@
 project/
 *.swp
 target/
+.ensime
