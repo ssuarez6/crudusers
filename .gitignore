@@ -2,4 +2,4 @@
 project/
 *.swp
 target/
-.ensime
+.ensime*
