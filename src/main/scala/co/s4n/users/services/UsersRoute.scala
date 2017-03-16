@@ -41,12 +41,13 @@ object UsersRoute {
   case class MsgUsers(users: Seq[User]) extends AppMsg
   case class MsgException(exceptionMessage: String) extends AppMsg
 
+  type FutureResponse = Future[(StatusCode, Option[AppMsg])]
   trait Responsable[T] {
-    def toResponse(fut: Future[T])(implicit ec: ExecutionContext): Future[(StatusCode, Option[AppMsg])]
+    def toResponse(fut: Future[T])(implicit ec: ExecutionContext): FutureResponse
   }
   object Responsable {
     object ResultSetFuture extends Responsable[ResultSet] {
-      def toResponse(fut: Future[ResultSet])(implicit ec: ExecutionContext): Future[(StatusCode, Option[AppMsg])] = {
+      def toResponse(fut: Future[ResultSet])(implicit ec: ExecutionContext): FutureResponse = {
         fut.map(res => (StatusCodes.OK, None)).recover{
           case ex => (StatusCodes.InternalServerError, Some(MsgException(ex.getMessage)))
         }
@@ -54,7 +55,7 @@ object UsersRoute {
     }
 
     object UserFuture extends Responsable[Option[User]]{
-      def toResponse(fut: Future[Option[User]])(implicit ec: ExecutionContext): Future[(StatusCode, Option[AppMsg])] = {
+      def toResponse(fut: Future[Option[User]])(implicit ec: ExecutionContext): FutureResponse = {
         fut.map(x => {
           if(x.isDefined) (StatusCodes.OK, Some(MsgUser(x.get)))
           else (StatusCodes.NotFound, None)
@@ -65,7 +66,7 @@ object UsersRoute {
     }
 
     object SeqUserFuture extends Responsable[Seq[User]] {
-      def toResponse(fut: Future[Seq[User]])(implicit ec: ExecutionContext): Future[(StatusCode, Option[AppMsg])] = {
+      def toResponse(fut: Future[Seq[User]])(implicit ec: ExecutionContext): FutureResponse = {
         fut.map(x => {
           (StatusCodes.OK, Some(MsgUsers(x)))
           }).recover {
