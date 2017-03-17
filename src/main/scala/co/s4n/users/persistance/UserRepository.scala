@@ -9,10 +9,10 @@ trait UserRepository extends ProductionDatabase {
   def getUserByUsername(username: String): Future[Option[User]] = 
     database.userModel.getUserByUsername(username)
 
-  def saveOrUpdate(user: User): Future[ResultSet] =
+  def saveOrUpdate(user: User): Future[User] =
     database.userModel.store(user)
 
-  def deleteByUsername(username: String): Future[ResultSet] =
+  def deleteByUsername(username: String): Future[String] =
     database.userModel.deleteUserByUsername(username)
 
   def getUsers: Future[Seq[User]] =

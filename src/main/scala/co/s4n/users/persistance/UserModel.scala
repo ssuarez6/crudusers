@@ -28,7 +28,7 @@ abstract class ConcreteUserModel extends UserModel with RootConnector {
       .one()
   }
 
-  def store(user: User): Future[ResultSet] = {
+  def store(user: User): Future[User] = {
     insert
       .value(_.id, user.id)
       .value(_.username, user.username)
@@ -36,13 +36,15 @@ abstract class ConcreteUserModel extends UserModel with RootConnector {
       .value(_.age, user.age)
       .consistencyLevel_=(ConsistencyLevel.ONE)
       .future()
+      .map(_ => user)
   }
 
-  def deleteUserByUsername(username: String): Future[ResultSet] = {
-    delete
+  def deleteUserByUsername(username: String): Future[String] = {
+    val query = delete
       .where(_.username eqs username)
       .consistencyLevel_=(ConsistencyLevel.ONE)
       .future()
+    query.map(_ => username)
   }
 
   def getUsers: Future[Seq[User]] = {

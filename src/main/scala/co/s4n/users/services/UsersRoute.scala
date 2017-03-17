@@ -21,19 +21,19 @@ class UsersRoute(userRepo: UserRepository)(implicit ec: ExecutionContext){
   val route = path("users" / Segment) {
     username => {
       get {
-        complete(UserFuture.toResponse(userRepo.getUserByUsername(username)))
+        complete(UserOptionFuture.toResponse(userRepo.getUserByUsername(username)))
       } ~ delete {
-        complete(ResultSetFuture.toResponse(userRepo.deleteByUsername(username))) 
+        complete(StringFuture.toResponse(userRepo.deleteByUsername(username))) 
       }
     }
   } ~ path("users"){
     post {
       entity(as[User]) { user =>
-        complete(ResultSetFuture.toResponse(userRepo.saveOrUpdate(user)))
+        complete(UserFuture.toResponse(userRepo.saveOrUpdate(user)))
       }
     } ~ put {
       entity(as[User]){ user =>
-        complete(ResultSetFuture.toResponse(userRepo.saveOrUpdate(user)))
+        complete(UserFuture.toResponse(userRepo.saveOrUpdate(user)))
       }
     } ~ get {
       complete(SeqUserFuture.toResponse(userRepo.getUsers))
@@ -48,14 +48,24 @@ object UsersRoute {
   }
   object Responsable {
     import StatusCodes._
-    object ResultSetFuture extends Responsable[ResultSet] {
-      def toResponse(fut: Future[ResultSet])(implicit ec: ExecutionContext): FutureResponse = {
+    object StringFuture extends Responsable[String] {
+      def toResponse(fut: Future[String])(implicit ec: ExecutionContext): FutureResponse = {
         fut.map(res => (OK, None)).recover{
           case ex => (InternalServerError, Some(MsgException(ex.getMessage)))
         }
       }
     }
-    object UserFuture extends Responsable[Option[User]]{
+
+    object UserFuture extends Responsable[User] {
+      def toResponse(fut: Future[User])(implicit ec: ExecutionContext): FutureResponse = {
+        fut.map(x =>{
+          (OK, Some(MsgUser(x)))
+          }).recover {
+            case ex => (InternalServerError, Some(MsgException(ex.getMessage)))
+          }
+      }
+    }
+    object UserOptionFuture extends Responsable[Option[User]]{
       def toResponse(fut: Future[Option[User]])(implicit ec: ExecutionContext): FutureResponse = {
         fut.map(x => {
           if(x.isDefined) (OK, Some(MsgUser(x.get)))
