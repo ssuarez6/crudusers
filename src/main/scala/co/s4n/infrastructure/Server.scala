@@ -7,13 +7,14 @@ import scala.io.StdIn
 import co.s4n.users.services.UsersRoute
 import co.s4n.users.persistance.ProductionDatabase
 import scala.concurrent.duration._
+import co.s4n.users.persistance.UserRepository
 
 object UsersServer extends App with ProductionDatabase{
   implicit val system = ActorSystem("crud-system")
   implicit val materializer = ActorMaterializer()
   implicit val executionContext = system.dispatcher
 
-  val ur = new UsersRoute
+  val ur = new UsersRoute(UserRepository)
   database.create(5 seconds)
 
   val bindingFuture = Http().bindAndHandle(ur.route, "localhost", 8080)

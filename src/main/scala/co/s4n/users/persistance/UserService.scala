@@ -1,11 +1,11 @@
-package co.s4n.users.services
+package co.s4n.users.persistance
 
 import co.s4n.users.persistance.ProductionDatabase
 import co.s4n.users.persistance.User
 import com.outworkers.phantom.dsl._
 import scala.concurrent.Future
 
-trait UserDatabase extends ProductionDatabase {
+trait UserRepository extends ProductionDatabase {
   def getUserByUsername(username: String): Future[Option[User]] = 
     database.userModel.getUserByUsername(username)
 
@@ -19,4 +19,4 @@ trait UserDatabase extends ProductionDatabase {
     database.userModel.getUsers
 }
 
-object UserDatabase extends UserDatabase with ProductionDatabase
+object UserRepository extends UserRepository with ProductionDatabase

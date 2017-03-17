@@ -1,6 +1,6 @@
 package co.s4n.users.persistance
 
-import Connector._
+import co.s4n.infrastructure.Connector._
 import com.outworkers.phantom.dsl._
 
 class UserDatabase(override val connector: KeySpaceDef) extends Database[UserDatabase](connector){
