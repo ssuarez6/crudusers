@@ -1,23 +1,16 @@
 package co.s4n.httptests
 
 import org.scalatest.{Matchers, WordSpec}
-import org.scalatest.FlatSpec
-import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.model._
 import akka.http.scaladsl.testkit.ScalatestRouteTest
-import akka.http.scaladsl.server._
-import Directives._
 import co.s4n.users.services.UsersRoute
-import scala.concurrent.duration._
-import akka.actor.ActorSystem
-import akka.stream.ActorMaterializer
-
 
 class UserHttpTest extends WordSpec with Matchers with ScalatestRouteTest {
   implicit val executionContext = system.dispatcher
   val route = new UsersRoute(UserRepositoryTest).route
 
   "The service" should {
-    "handle a GET request to the users path" in {
+    "handled a GET request to the users path" in {
       Get("/users") ~> route ~> check{
         handled shouldBe true
       }
@@ -30,7 +23,7 @@ class UserHttpTest extends WordSpec with Matchers with ScalatestRouteTest {
       }
     }
 
-    "unhandle invalid paths" in {
+    "unhandled invalid paths" in {
       Get("/invalidpath") ~> route ~> check {
         handled shouldBe false
       }
@@ -38,14 +31,100 @@ class UserHttpTest extends WordSpec with Matchers with ScalatestRouteTest {
 
     "not find users that don't exist" in {
       Get("/users/nonexistinguser") ~> route ~> check {
-        status == StatusCodes.NotFound
+        status shouldBe StatusCodes.NotFound
       }
     }
 
     "allow deletion on an specific user" in {
       Delete("/users") ~> route ~> check {
+        handled shouldBe false
+      }
+
+      Delete("/users/some") ~> route ~> check {
+        status shouldBe StatusCodes.OK
+      }
+    }
+
+    "allow posting only at /users path" in {
+      Post("/different") ~> route ~> check {
+        handled shouldBe false
+      }
+      
+      val json = """
+      {
+        "id": "375b705f-d74d-49c4-8096-b21ecddc1cfc",
+        "username": "test",
+        "fullName": "lasdkjfañlds",
+        "age": 20
+      }
+      """
+
+      val postRequest = HttpRequest(
+        HttpMethods.POST,
+        uri = "/users",
+        entity = HttpEntity(MediaTypes.`application/json`, json)
+      )
+
+      postRequest ~> route ~> check {
+        handled shouldBe true
+        status shouldBe StatusCodes.OK
+      }
+    }
+
+    "allow posting only users with age > 18" {
+
+      val json = """
+      {
+        "id": "375b705f-d74d-49c4-8096-b21ecddc1cfc",
+        "username": "test",
+        "fullName": "lasdkjfañlds",
+        "age": 14
+      }
+      """
+      val postRequest = HttpRequest(
+        HttpMethods.POST,
+        uri = "/users",
+        entity = HttpEntity(MediaTypes.`application/json`, json)
+      )
+
+      postRequest ~> route ~> check {
         status == StatusCodes.BadRequest
       }
     }
+
+    "allow putting only at /users" in {
+
+      val json = """
+      {
+        "id": "375b705f-d74d-49c4-8096-b21ecddc1cfc",
+        "username": "test",
+        "fullName": "lasdkjfañlds",
+        "age": 25
+      }
+      """
+
+      val putReq = HttpRequest(
+        HttpMethods.PUT,
+        uri = "/users",
+        entity = HttpEntity(MediaTypes.`application/json`, json)
+      )
+
+      putReq ~> route ~> check {
+        handled shouldBe true
+        status shouldBe StatusCodes.OK
+      }
+
+      val invalid = HttpRequest(
+        HttpMethods.PUT,
+        uri = "/asdlkjf",
+        entity = HttpEntity(MediaTypes.`application/json`, json)
+      )
+
+      invalid ~> route ~> check {
+        handled shouldBe false
+      }
+    }
   }
+
+  system.terminate
 }

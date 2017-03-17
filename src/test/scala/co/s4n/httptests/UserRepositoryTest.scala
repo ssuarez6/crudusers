@@ -3,7 +3,6 @@ package co.s4n.httptests
 import co.s4n.users.persistance.{User, UserRepository}
 import java.util.UUID
 import scala.concurrent.{Future, ExecutionContext}
-import scala.concurrent.ExecutionContext.Implicits.global
 import com.outworkers.phantom.dsl._
 
 object UserRepositoryTest extends UserRepository {
@@ -12,7 +11,7 @@ object UserRepositoryTest extends UserRepository {
       User(UUID.randomUUID, "usertest2", "testname", 24),
       User(UUID.randomUUID, "usertest3", "testname", 24),
       User(UUID.randomUUID, "usertest4", "testname", 24)
-      )
+    )
   override def getUserByUsername(username:String): Future[Option[User]] = {
     Future{
       users.find(x => x.username == username)
@@ -23,13 +22,11 @@ object UserRepositoryTest extends UserRepository {
     Future(users)
   }
 
-  override def deleteByUsername(username: String): Future[ResultSet] = {
-    object rs extends ResultSet
-    Future(rs)
+  override def deleteByUsername(username: String): Future[String] = {
+    Future(username)
   }
 
-  override def saveOrUpdate(user: User): Future[ResultSet] = {
-    object rs extends ResultSet
-    Future(rs)
+  override def saveOrUpdate(user: User): Future[User] = {
+    Future(user)
   }
 }
