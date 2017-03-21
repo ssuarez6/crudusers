@@ -1,7 +1,6 @@
 package co.s4n.users.persistance
 
-import co.s4n.users.persistance.ProductionDatabase
-import co.s4n.users.persistance.User
+import co.s4n.users.persistance.{ProductionDatabase, User}
 import com.outworkers.phantom.dsl._
 import scala.concurrent.Future
 

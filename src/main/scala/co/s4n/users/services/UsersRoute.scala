@@ -3,10 +3,8 @@ package co.s4n.users.services
 import akka.http.scaladsl.server.Directives._
 import de.heikoseeberger.akkahttpcirce.CirceSupport._
 import io.circe.generic.auto._
-import co.s4n.users.persistance.User
-import scala.concurrent.Future
-import co.s4n.users.persistance.UserRepository
-import scala.concurrent.ExecutionContext
+import co.s4n.users.persistance.{User, UserRepository}
+import scala.concurrent.{Future, ExecutionContext}
 import Responsable._
 
 class UsersRoute(userRepo: UserRepository)(implicit ec: ExecutionContext){

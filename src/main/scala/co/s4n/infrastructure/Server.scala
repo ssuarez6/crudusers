@@ -5,9 +5,8 @@ import akka.http.scaladsl.Http
 import akka.stream.ActorMaterializer
 import scala.io.StdIn
 import co.s4n.users.services.UsersRoute
-import co.s4n.users.persistance.ProductionDatabase
+import co.s4n.users.persistance.{ProductionDatabase, UserRepository}
 import scala.concurrent.duration._
-import co.s4n.users.persistance.UserRepository
 
 object UsersServer extends App with ProductionDatabase{
   implicit val system = ActorSystem("crud-system")

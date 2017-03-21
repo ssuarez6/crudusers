@@ -1,9 +1,9 @@
 package co.s4n.users.services
 
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 import akka.http.scaladsl.model.{StatusCodes, StatusCode}
 import co.s4n.users.persistance.User
+import StatusCodes._
 
 sealed trait AppMsg
 case class MsgUser(user: User) extends AppMsg
@@ -15,7 +15,6 @@ trait Responsable[T] {
   def toResponse(fut: Future[T])(implicit ec: ExecutionContext): FutureResponse
 }
 object Responsable {
-  import StatusCodes._
   implicit object StringResponsable extends Responsable[String] {
     def toResponse(fut: Future[String])(implicit ec: ExecutionContext): FutureResponse = {
       fut.map(res => (OK, None)).recover{
