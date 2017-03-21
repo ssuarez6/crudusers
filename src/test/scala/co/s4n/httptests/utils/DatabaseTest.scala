@@ -19,6 +19,6 @@ trait DatabaseTest extends Suite
     super.beforeAll()
     implicit val system = ActorSystem("test")
     implicit val executor: ExecutionContextExecutor = system.dispatcher
-    database.create(5 seconds)
+    database.create(10 seconds)
   }
 }

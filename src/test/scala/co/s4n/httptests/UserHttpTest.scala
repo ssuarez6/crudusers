@@ -71,27 +71,6 @@ class UserHttpTest extends WordSpec with Matchers with ScalatestRouteTest {
       }
     }
 
-    "allow POST only users with age > 18" in {
-
-      val json = """
-      {
-        "id": "375b705f-d74d-49c4-8096-b21ecddc1cfc",
-        "username": "test",
-        "fullName": "lasdkjfañlds",
-        "age": 14
-      }
-      """
-      val req = HttpRequest(
-        HttpMethods.POST,
-        uri = "/users",
-        entity = HttpEntity(MediaTypes.`application/json`, json)
-      )
-
-      req ~> route ~> check {
-        handled shouldBe false
-      }
-    }
-
     "allow PUT only at /users" in {
 
       val json = """
