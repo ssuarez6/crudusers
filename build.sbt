@@ -32,4 +32,4 @@ libraryDependencies ++= {
 cancelable in Global := true 
 Revolver.settings
 
-PhantomSbtPlugin.projectSettings
+//PhantomSbtPlugin.projectSettings
