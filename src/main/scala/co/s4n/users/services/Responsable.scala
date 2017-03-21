@@ -2,12 +2,8 @@ package co.s4n.users.services
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
-import de.heikoseeberger.akkahttpcirce.CirceSupport._
-import akka.http.scaladsl.model.{HttpResponse, StatusCodes, StatusCode}
-import akka.http.scaladsl.server.Directives._
-import io.circe.generic.auto._
+import akka.http.scaladsl.model.{StatusCodes, StatusCode}
 import co.s4n.users.persistance.User
-import io.circe.Json
 
 sealed trait AppMsg
 case class MsgUser(user: User) extends AppMsg

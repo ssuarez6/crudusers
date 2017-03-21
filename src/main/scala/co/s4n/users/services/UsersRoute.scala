@@ -1,12 +1,9 @@
 package co.s4n.users.services
 
 import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.model.{HttpResponse, StatusCodes, StatusCode}
 import de.heikoseeberger.akkahttpcirce.CirceSupport._
 import io.circe.generic.auto._
 import co.s4n.users.persistance.User
-import io.circe.Json
-import com.outworkers.phantom.dsl.ResultSet
 import scala.concurrent.Future
 import co.s4n.users.persistance.UserRepository
 import scala.concurrent.ExecutionContext
