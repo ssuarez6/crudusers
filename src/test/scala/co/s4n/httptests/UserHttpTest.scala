@@ -45,7 +45,7 @@ class UserHttpTest extends WordSpec with Matchers with ScalatestRouteTest {
       }
     }
 
-    "allow posting only at /users path" in {
+    "allow POST only at /users path" in {
       Post("/different") ~> route ~> check {
         handled shouldBe false
       }
@@ -71,7 +71,7 @@ class UserHttpTest extends WordSpec with Matchers with ScalatestRouteTest {
       }
     }
 
-    "allow posting only users with age > 18" {
+    "allow POST only users with age > 18" in {
 
       val json = """
       {
@@ -81,18 +81,18 @@ class UserHttpTest extends WordSpec with Matchers with ScalatestRouteTest {
         "age": 14
       }
       """
-      val postRequest = HttpRequest(
+      val req = HttpRequest(
         HttpMethods.POST,
         uri = "/users",
         entity = HttpEntity(MediaTypes.`application/json`, json)
       )
 
-      postRequest ~> route ~> check {
-        status == StatusCodes.BadRequest
+      req ~> route ~> check {
+        handled shouldBe false
       }
     }
 
-    "allow putting only at /users" in {
+    "allow PUT only at /users" in {
 
       val json = """
       {
