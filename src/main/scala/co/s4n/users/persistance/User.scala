@@ -12,9 +12,3 @@ case class User(
   fullName: String,
   age: Int
 ) 
-/*
-object User {
-  override def apply(id: UUID, username: String, fullName: String, age: Int): Try[User] = {
-    
-  }
-}*/
