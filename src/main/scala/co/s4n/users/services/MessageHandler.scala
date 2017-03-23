@@ -22,7 +22,7 @@ class MessageProducer {
     .withBootstrapServers("localhost:9092")
 
   def produceMessage(topic: String, msg: String): Future[Done] = {
-    Source(msg)
+    Source.single(msg)
       .map(elem =>
           new ProducerRecord[Array[Byte], String](topic, msg))
             .runWith(Producer.plainSink(settings))
