@@ -12,6 +12,8 @@ class UsersRoute(userRepo: UserRepository)(implicit ec: ExecutionContext){
     resp.toResponse(arg)
   }
 
+  val mp = new MessageProducer
+
   val route = path("users" / Segment) {
     username => {
       get {
@@ -23,6 +25,7 @@ class UsersRoute(userRepo: UserRepository)(implicit ec: ExecutionContext){
   } ~ path("users"){
     post {
       entity(as[User]) { user =>
+        mp.produceMessage("users-creation", user.toString)
         complete(handle(userRepo.saveOrUpdate(user)))
       }
       } ~ put {

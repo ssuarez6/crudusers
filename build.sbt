@@ -7,7 +7,8 @@ scalaVersion := "2.12.1"
 resolvers ++= Seq(
   Resolver.bintrayRepo("hseeberger", "maven"),
   "Typesafe repository releases" at "http://repo.typesafe" + ".com/typesafe/releases/",
-  "Twitter Repository"           at "http://maven.twttr.com"
+  "Twitter Repository"           at "http://maven.twttr.com",
+  Resolver.bintrayRepo("cakesolutions", "maven")
 )
 
 libraryDependencies ++= {
@@ -25,12 +26,13 @@ libraryDependencies ++= {
     "io.circe"            %% "circe-core"           % circeV,
     "io.circe"            %% "circe-generic"        % circeV,
     "io.circe"            %% "circe-parser"         % circeV,
-    "de.heikoseeberger"   %% "akka-http-circe"      % "1.13.0"
+    "de.heikoseeberger"   %% "akka-http-circe"      % "1.13.0",
+    "com.typesafe.akka"   %% "akka-stream-kafka"    % "0.14"
   )
 }
 
 cancelable in Global := true 
 
-PhantomSbtPlugin.projectSettings
+//PhantomSbtPlugin.projectSettings
 
 com.updateimpact.Plugin.apiKey in ThisBuild := "373nusHCPn5K9a40JMtjHcDANcMU8TO9"

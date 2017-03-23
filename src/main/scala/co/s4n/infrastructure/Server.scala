@@ -16,6 +16,7 @@ object UsersServer extends App with ProductionDatabase{
   val ur = new UsersRoute(UserRepository)
   database.create(5 seconds)
 
+
   val bindingFuture = Http().bindAndHandle(ur.route, "localhost", 8080)
   println("Server online at localhost:8080\nRETURN to stop...")
   StdIn.readLine()
