@@ -35,6 +35,6 @@ libraryDependencies ++= {
 
 cancelable in Global := true 
 
-//PhantomSbtPlugin.projectSettings
+PhantomSbtPlugin.projectSettings
 
 com.updateimpact.Plugin.apiKey in ThisBuild := "373nusHCPn5K9a40JMtjHcDANcMU8TO9"
