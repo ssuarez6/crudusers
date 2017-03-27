@@ -1,18 +1,19 @@
 package co.s4n.users.services
 
+import java.util.Properties
+
 import akka.http.scaladsl.server.Directives._
 import de.heikoseeberger.akkahttpcirce.CirceSupport._
 import io.circe.generic.auto._
 import co.s4n.users.persistance.{User, UserRepository}
-import scala.concurrent.{Future, ExecutionContext}
+import scala.concurrent.{ExecutionContext, Future}
 import Responsable._
+import org.apache.kafka.clients.producer.{KafkaProducer, ProducerRecord}
 
 class UsersRoute(userRepo: UserRepository)(implicit ec: ExecutionContext){
   def handle[T](arg: Future[T])(implicit resp: Responsable[T]) = {
     resp.toResponse(arg)
   }
-
-  val mp = new MessageProducer
 
   val route = path("users" / Segment) {
     username => {
@@ -25,7 +26,13 @@ class UsersRoute(userRepo: UserRepository)(implicit ec: ExecutionContext){
   } ~ path("users"){
     post {
       entity(as[User]) { user =>
-        mp.produceMessage("users-creation", user.toString)
+        val props = new Properties()
+        props.put("bootstrap.servers", "127.0.0.1:9092")
+        props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer")
+        props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer")
+        props.put("auto.commit.interval.ms", "1000")
+        val producer = new KafkaProducer[String, String](props)
+        producer.send(new ProducerRecord[String, String]("users-creation", user.toString))
         complete(handle(userRepo.saveOrUpdate(user)))
       }
       } ~ put {

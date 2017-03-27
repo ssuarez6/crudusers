@@ -1,47 +1,29 @@
 package co.s4n.users.services
 
-import java.util.concurrent.atomic.AtomicLong
+import java.util
+import java.util.Properties
 
-import akka.Done
-import akka.actor.ActorSystem
-import akka.kafka.{ConsumerSettings, ProducerSettings, Subscriptions}
-import akka.kafka.scaladsl.{Consumer, Producer}
-import akka.stream.scaladsl.Source
-import akka.stream.ActorMaterializer
-import org.apache.kafka.clients.consumer.{ConsumerConfig, ConsumerRecord}
-import org.apache.kafka.clients.producer.ProducerRecord
-import org.apache.kafka.common.serialization.{ByteArrayDeserializer, ByteArraySerializer, StringDeserializer, StringSerializer}
+import org.apache.kafka.clients.consumer.KafkaConsumer
 
-import scala.concurrent.Future
-
-class MessageProducer {
-  implicit val system = ActorSystem("kafka")
-  implicit val executionContext = system.dispatcher
-  implicit val materializer = ActorMaterializer()
-  val settings = ProducerSettings(system, new ByteArraySerializer, new StringSerializer)
-    .withBootstrapServers("localhost:9092")
-
-  def produceMessage(topic: String, msg: String): Future[Done] = {
-    Source.single(msg)
-      .map(elem =>
-          new ProducerRecord[Array[Byte], String](topic, msg))
-            .runWith(Producer.plainSink(settings))
-  }
-}
-class MessageConsumer {
-  implicit val system = ActorSystem("kafka")
-  implicit val materializer = ActorMaterializer()
-  val consumerSettings = ConsumerSettings(system, new ByteArrayDeserializer, new StringDeserializer)
-    .withBootstrapServers("localhost:9092")
-    .withGroupId("group1")
-    .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
-
-  val done = Consumer.committableSource(consumerSettings, Subscriptions.topics("users-creation"))
-    .runForeach {
-      msg => println(s"From consumer: ${msg.record.value}")
+class MessageConsumer extends Runnable {
+  val props = new Properties()
+  props.put("bootstrap.servers", "localhost:9092")
+  props.put("group.id", "usersconsumer")
+  props.put("enable.auto.commit", "false")
+  props.put("session.timeout.ms", "10000")
+  props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer")
+  props.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer")
+  override def run() = {
+    val consumer = new KafkaConsumer[String, String](props)
+    consumer.subscribe(util.Arrays.asList("users-creation"))
+    while(true){
+      val records = consumer.poll(200)
+      val it = records.iterator()
+      while(it.hasNext){
+        val record = it.next()
+        println(s"Got a message of topic ${record.topic()}")
+        println(s"Message: ${record.value()}")
+      }
     }
-}
-
-object MessagePrinter extends App {
-  (new MessageConsumer).done
+  }
 }

@@ -27,12 +27,14 @@ libraryDependencies ++= {
     "io.circe"            %% "circe-generic"        % circeV,
     "io.circe"            %% "circe-parser"         % circeV,
     "de.heikoseeberger"   %% "akka-http-circe"      % "1.13.0",
-    "com.typesafe.akka"   %% "akka-stream-kafka"    % "0.14"
+    "com.typesafe.akka"   %% "akka-stream-kafka"    % "0.14",
+    "org.apache.kafka"    %%  "kafka"               % "0.10.2.0" exclude("org.slf4j", "slf4j-log4j12")
   )
 }
 
+
 cancelable in Global := true 
 
-PhantomSbtPlugin.projectSettings
+//PhantomSbtPlugin.projectSettings
 
 com.updateimpact.Plugin.apiKey in ThisBuild := "373nusHCPn5K9a40JMtjHcDANcMU8TO9"
